@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PROJECT TeFA Wisesa (Auto Care Tracker)
+Sistem informasi manajemen bengkel kendaraan terintegrasi: web admin, aplikasi mobile pelanggan, halaman pelacakan servis publik, backend REST API, dan database SQL Server.
+---
 
-## Getting Started
+## Tim Developer
+|    Nama   |                    Peran                     |                     GitHub                     |
+|-----------|----------------------------------------------|------------------------------------------------|
+| **Dimas** | Project Lead & Full Stack Web Developer      | [GitHub](https://github.com/dimasgood691-byte) |
+| **Andra** | Backend Web Developer                        | [GitHub](https://github.com/ridwanaulandra)    |
+| **Azzam** | Full Stack Mobile Developer                  | [GitHub](https://github.com/Azzamwahyudin1)    |
+| **Bima**  | Frontend Web Developer                       | [GitHub](https://github.com)
+| **Catur** | Data Analyst                                 | [GitHub](https://github.com)
+| **Asyraf**| UI & UX Desainer                             | [GitHub](https://github.com)
 
-First, run the development server:
+## [VERSI TECH STACK YANG DIGUNAKAN]
+   - **.NET** : 10.0.401 [Backend]
+   - **NEXT.JS** : 16.4.3 [FrontendWeb]
+   - **Flutter** : 3.47.7 [MobileApp]
+
+## [PROGRES PENGERJAAN]
+### 1. Membuat Page Login Admin (Next.js)
+
+Dalam pengerjaan halaman login di `page.tsx`, tidak ada library eksternal tambahan yang di-install di luar bawaan proyek. Seluruh fitur dan efek visual dibangun menggunakan tech stack yang sudah terdaftar di `package.json`:
+
+1. **Library Utama (Bawaan Project)**
+   - **React (react v19.3.0)**
+     - Digunakan untuk hooks bawaan yaitu `useState` dan `useEffect` (mengelola input email/password, deteksi Caps Lock, fitur Ingat Email, serta melacak posisi koordinat kursor x, y untuk efek spotlight).
+   - **Next.js (next v16.4.0 — modul next/navigation & next/font/google)**
+     - Menggunakan `useRouter` dari `next/navigation` untuk mengarahkan pengguna (redirect) setelah login berhasil.
+     - Menggunakan font Geist dan Geist_Mono dari `next/font/google` di `layout.tsx`.
+   - **Tailwind CSS v4 (tailwindcss & @tailwindcss/turbopack)**
+     - Digunakan untuk seluruh desain responsif (split-screen), efek glassmorphism (backdrop-blur), gradasi warna, shadow, dan transisi interaktif.
+
+2. **Teknik Native (Tanpa Library Tambahan)**
+   - **CSS Keyframes Murni (globals.css):** Animasi getar saat error (`animate-shake`), lencana melayang (`animate-float`), dan bola cahaya bergerak (`animate-blob`) ditulis menggunakan `@keyframes` CSS murni tanpa library animasi seperti Framer Motion.
+   - **Inline SVG:** Seluruh ikon (logo, email, gembok, mata show/hide password, peringatan) menggunakan kode `<svg>` langsung di JSX, sehingga tidak perlu menginstal library ikon seperti lucide-react atau react-icons.
+   - **Browser Web API (fetch & localStorage):** Menggunakan `fetch()` bawaan browser untuk memanggil endpoint REST API .NET (`/api/users/login`) dan `localStorage` untuk menyimpan sesi admin serta preferensi ingat email.
+
+### 2. Arsitektur HTTP-Only Cookie, Server Actions & Middleware (Next.js)
+Untuk meningkatkan keamanan sesi autentikasi di sisi *frontend* web (Next.js) dan mencegah serangan XSS (*Cross-Site Scripting*), penyimpanan token JWT kini dipindahkan dari `localStorage` ke **HTTP-Only Cookie**:
+1. **Server Actions (`app/actions/auth.tsx`):**
+   - `loginAdmin`: Menangani proses *login* dari sisi *server* Next.js ke *endpoint* `/api/users/login` (.NET), memvalidasi bahwa *role* pengguna termasuk staf operasional bengkel (`SuperAdmin`, `Kasir`, atau `Mekanik`), lalu menanamkan token JWT ke dalam *cookie* `admin_token` dan `user_role` dengan atribut `httpOnly: true`, `sameSite: "lax"`, dan masa aktif 3 jam.
+   - `logoutAdmin`: Menghapus *cookie* `admin_token` dan `user_role` secara aman dari sisi *server* lalu mengarahkan pengguna kembali ke `/login`.
+2. **Route Protection Middleware (`middleware.ts`):**
+   - Memproteksi seluruh rute `/dashboard/:path*` dengan memvalidasi keberadaan token, mengekstrak klaim `role` langsung dari *payload* JWT, serta memeriksa masa berlaku token (`exp`).
+   - Menerapkan pembatasan akses sub-rute berbasis *role* (misalnya halaman `/dashboard/users` hanya dapat diakses oleh `SuperAdmin`).
+   - Mencegah staf yang sudah terautentikasi kembali ke halaman `/login` sebelum melakukan *logout*.
+
+
+## Langkah Instalasi
+#### [1] Clone Repository
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/dimasgood691-byte/Auto-Care-Tracker.git
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### [2] Menjalankan Frontend Web (NEXT.JS)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cd web_auto_care_tracker
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Buat file bernama .env.local di dalam folder web_auto_care_tracker, lalu tambahkan baris konfigurasi berikut:
 
-## Learn More
+```
+NEXT_PUBLIC_API_URL=http://localhost:5083/api
+```
 
-To learn more about Next.js, take a look at the following resources:
+install seluruh library atau dependencies web :
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+jalankan server NEXT.JS :
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev #frontend web berjalan di http://localhost:3000
+```
